@@ -1,28 +1,32 @@
-function rate=rate_calcu(data)
-    %USE TABULATE 
+function rate=rate_calcu_seq(data)
     %计算不同类型的比例
     %输入: [n 1]的列向量
     %输出: 列向量中不同的类型及比例,[m 2]矩阵
     %对数值值的vector或cell都以数值存,对混合型和cell都用str存
-%     if isa(data,'cell') && isa(data{1,1},'double') && isa(cell2mat(data),'double')
-%         data=cellstr(num2str(cell2mat(data)));
-%     end
-    %% cell convert
+    %原理与rate_calcu不同,rate_calcu是unique之后再找有多少个,rate_calcu_seq是先排序再找.
+    %% cell convert and sort
     ct = cell_type(data);
     if ct == 3
         data = cell_convert(data);
     elseif ct == 1
         data = cell2mat(data);
     end
+    data = sort(data);
     %% rate calculate
-    [m n]=size(data);
+    m = size(data,2);
     uni_var=unique(data);
     uni_len=length(uni_var);
     rate=zeros(uni_len,2);
-    if ct == 2 || ct ==3
-        for i=1:uni_len
-            rate(i,1)=length(find(strcmp(data(:),uni_var{i})));
-            rate(i,2)=rate(i,1)/m;
+    if ct == 2 || ct ==3        %cell contains char
+        count = 1;
+        start = 1;
+        value = data{1,1};
+        for i = 2:m
+            if strcmp(data{i,1},value)
+                continue;
+            else
+                rate(i,1)=length(find(strcmp(data(:),uni_var{i})));
+                rate(i,2)=rate(i,1)/m;
         end
         rate=cat(2,uni_var,num2cell(rate));
         rate=sortrows(rate,-2);
